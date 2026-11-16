@@ -32,6 +32,8 @@ def display_activity(activity):
         print("No recent public activity found.")
         return
     
+    print(f"\nFound {len(activity)} recent activities:\n")
+        
     for event in activity:
         event_type = event.get("type")
         repo = event.get("repo", {}).get("name")
@@ -62,9 +64,56 @@ def display_activity(activity):
             ref = payload.get("ref")
             ref_type = payload.get("ref_type")
 
-            print(f"- Deleted {ref_type} '{ref}' in {repo}")
-    
+            if ref and ref_type:
+                print(f"- Deleted {ref_type} '{ref}' in {repo}")
+            else:
+                print(f"- Deleted something in {repo}")
+                    
+        elif event_type == "ForkEvent":
+            payload = event.get("payload", {})
+            forked_repo = payload.get("forkee", {}).get("full_name")
 
+            if forked_repo:
+                print(f"- Forked {repo} into {forked_repo}")
+            else:
+                print(f"- Forked {repo}")
+        
+        elif event_type == "IssuesEvent":
+            payload = event.get("payload", {})
+            action = payload.get("action")
+            issue = payload.get("issue", {})
+            title = issue.get("title") 
+            
+            if action and title:
+                print(f"- {action.capitalize()} issue '{title}' in {repo}")
+            else:
+                print(f"- issue activity in {repo}")
+                
+        elif event_type == "PullRequestEvent":
+            payload = event.get("payload", {})
+            action = payload.get("action")
+            pull_request = payload.get("pull_request", {})
+            title = pull_request.get("title")
+            
+            if action and title:
+                print(f"- {action.capitalize()} pull request '{title}' in {repo}")
+            else:
+                print(f"- Pull request activity in {repo}")
+                
+        elif event_type == "ReleaseEvent":
+            payload = event.get("payload", {})
+            action = payload.get("action")
+            release = payload.get("release", {})
+            name = release.get("name") or release.get("tag_name")
+            
+            if action and name:
+                print(f"- {action.capitalize()} release '{name}' in {repo}")
+            else:
+                print(f"- Release activity in {repo}")
+        
+        elif event_type == "PublicEvent":
+            print(f"- Made repository {repo} public")
+                
 def main():
     if len(sys.argv) < 2:
         print("usage: python main.py <username>")
